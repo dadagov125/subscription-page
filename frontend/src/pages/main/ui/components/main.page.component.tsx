@@ -114,6 +114,15 @@ export const MainPageComponent = ({ isMobile, platform }: IMainPageComponentProp
                         <SubscriptionInfoBlockRenderer isMobile={isMobile} />
                     )}
 
+                    {/* QR-код нужен, когда подписку переносят на другое устройство,
+                        и это второе по частоте действие после установки. В шапке
+                        он прятался за иконкой ссылки — её не находили. */}
+                    <SubscriptionLinkWidget
+                        hideGetLink={config.baseSettings.hideGetLinkButton}
+                        supportUrl={config.brandingSettings.supportUrl}
+                        variant="button"
+                    />
+
                     {atLeastOnePlatformApp && (
                         <InstallationGuideConnector
                             BlockRenderer={

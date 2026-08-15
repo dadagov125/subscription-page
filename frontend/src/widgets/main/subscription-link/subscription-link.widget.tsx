@@ -3,8 +3,8 @@ import {
     IconBrandTelegram,
     IconBrandVk,
     IconCopy,
-    IconLink,
-    IconMessageChatbot
+    IconMessageChatbot,
+    IconQrcode
 } from '@tabler/icons-react'
 import { ActionIcon, Button, Group, Image, Stack, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
@@ -13,6 +13,7 @@ import { modals } from '@mantine/modals'
 import { renderSVG } from 'uqr'
 
 import { constructSubscriptionUrl } from '@shared/utils/construct-subscription-url'
+import { useCurrentLang } from '@entities/app-config-store'
 import { useSubscription } from '@entities/subscription-info-store'
 import { vibrate } from '@shared/utils/vibrate'
 import { useTranslation } from '@shared/hooks'
@@ -22,12 +23,24 @@ import classes from './subscription-link.module.css'
 interface IProps {
     hideGetLink: boolean
     supportUrl: string
+    /** Показать как отдельную подписанную кнопку, а не как иконку в шапке.
+     *  Иконка в шапке непонятна: люди не догадываются, что за ней QR-код. */
+    variant?: 'button' | 'icon'
 }
 
-export const SubscriptionLinkWidget = ({ supportUrl, hideGetLink }: IProps) => {
+/** Подпись кнопки. В базовых переводах страницы нет строки «Показать QR»
+ *  (там «Получить ссылку»), а добавлять свой ключ в конфиг — значит тянуть
+ *  правку ещё и в панель. Двух языков здесь достаточно. */
+const QR_LABEL: Record<string, string> = {
+    ru: 'Показать QR',
+    en: 'Show QR'
+}
+
+export const SubscriptionLinkWidget = ({ supportUrl, hideGetLink, variant = 'icon' }: IProps) => {
     const { t, baseTranslations } = useTranslation()
     const subscription = useSubscription()
     const clipboard = useClipboard({ timeout: 10000 })
+    const currentLang = useCurrentLang()
 
     const subscriptionUrl = constructSubscriptionUrl(
         window.location.href,
@@ -121,6 +134,23 @@ export const SubscriptionLinkWidget = ({ supportUrl, hideGetLink }: IProps) => {
         })
     }
 
+    if (variant === 'button') {
+        if (hideGetLink) return null
+
+        return (
+            <Button
+                fullWidth
+                leftSection={<IconQrcode size={20} />}
+                onClick={handleGetLink}
+                radius="md"
+                size="md"
+                variant="filled"
+            >
+                {QR_LABEL[currentLang] ?? QR_LABEL.en}
+            </Button>
+        )
+    }
+
     return (
         <Group gap="xs" ml="auto" wrap="nowrap">
             {!hideGetLink && (
@@ -131,7 +161,7 @@ export const SubscriptionLinkWidget = ({ supportUrl, hideGetLink }: IProps) => {
                     size="xl"
                     variant="default"
                 >
-                    <IconLink />
+                    <IconQrcode />
                 </ActionIcon>
             )}
 
