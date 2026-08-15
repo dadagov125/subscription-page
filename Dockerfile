@@ -1,3 +1,15 @@
+# Апстрим собирает фронтенд в CI и кладёт готовый frontend/dist рядом с Dockerfile.
+# Мы собираем образ из исходников на сервере, поэтому фронтенд собираем здесь же —
+# иначе шаг COPY frontend/dist падает на пустом месте.
+FROM node:24.18-trixie-slim AS frontend-build
+WORKDIR /opt/frontend
+
+COPY frontend/package*.json ./
+RUN npm ci --prefer-offline --no-audit --no-fund
+
+COPY frontend/ .
+RUN npm run start:build
+
 FROM node:24.18-trixie-slim AS backend-build
 WORKDIR /opt/app
 
@@ -28,7 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 
 COPY --from=backend-build /opt/app/dist ./dist
 
-COPY frontend/dist/ ./frontend/
+COPY --from=frontend-build /opt/frontend/dist/ ./frontend/
 COPY backend/ecosystem.config.js ./
 COPY backend/docker-entrypoint.sh ./
 
