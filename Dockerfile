@@ -5,7 +5,11 @@ FROM node:24.18-trixie-slim AS frontend-build
 WORKDIR /opt/frontend
 
 COPY frontend/package*.json ./
-RUN npm ci --prefer-offline --no-audit --no-fund
+# Именно npm install, а не npm ci: в апстриме package-lock.json фронтенда
+# рассинхронизирован с package.json (в локе нет eslint и его зависимостей),
+# и ci на таком отказывается ставить. Пересобирать лок у себя — значит ловить
+# конфликт при каждом обновлении апстрима.
+RUN npm install --no-audit --no-fund
 
 COPY frontend/ .
 RUN npm run start:build
